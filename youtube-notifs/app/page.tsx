@@ -5,9 +5,10 @@ import { useState } from 'react';
 const SearchForm = () => {
   const [query, setQuery] = useState('');
   const [channels, setChannels] = useState([]);
+  const [videos, setVideos] = useState([]);
   const [error, setError] = useState('');
 
-  const handleSearch = async (e) => {
+  const handleSearchChannels = async (e) => {
     e.preventDefault();
 
     setError('');
@@ -27,20 +28,50 @@ const SearchForm = () => {
     }
   };
 
+  const handleSearchVideos = async (e) => {
+    e.preventDefault();
+
+    setError('');
+    setVideos([]);
+
+    try {
+      // Send a GET request to your API route with the search query
+      const res = await fetch(`/api/youtube?q=${query}`);
+      if (!res.ok) {
+        throw new Error('Failed to fetch videos');
+      }
+
+      const data = await res.json();
+      setVideos(data);
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
   return (
     <div>
-      <form onSubmit={handleSearch}>
+      <form onSubmit={handleSearchChannels}>
         <input
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search for YouTube channels"
         />
-        <button type="submit">Search</button>
+        <button type="submit">Search Channels</button>
+      </form>
+
+      <form onSubmit={handleSearchVideos}>
+        <input
+          type="text"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Search for YouTube videos"
+        />
+        <button type="submit">Search Videos</button>
       </form>
 
       {error && <p style={{ color: 'red' }}>{error}</p>}
-
+{/* 
       <div>
         {channels.length > 0 && (
           <ul>
@@ -50,6 +81,21 @@ const SearchForm = () => {
                 <p> {channel.id}</p>
                 <img src={channel.thumbnail} alt={channel.title} />
                 <p>{channel.description}</p>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div> */}
+
+      <div>
+        {videos.length > 0 && (
+          <ul>
+            {videos.map((video) => (
+              <li key={video.id}>
+                <h3>{video.title}</h3>
+                <p> {video.id}</p>
+                <img src={video.thumbnail} alt={video.title} />
+                <p>{video.description}</p>
               </li>
             ))}
           </ul>
