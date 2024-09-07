@@ -4,24 +4,24 @@ import { useState } from 'react';
 
 const SearchForm = () => {
   const [query, setQuery] = useState('');
-  const [videos, setVideos] = useState([]);
+  const [channels, setChannels] = useState([]);
   const [error, setError] = useState('');
 
   const handleSearch = async (e) => {
     e.preventDefault();
-    
+
     setError('');
-    setVideos([]);
+    setChannels([]);
 
     try {
       // Send a GET request to your API route with the search query
-      const res = await fetch(`/api/youtube?q=${query}`);
+      const res = await fetch(`/api/youtube/channels?q=${query}`);
       if (!res.ok) {
-        throw new Error('Failed to fetch videos');
+        throw new Error('Failed to fetch channels');
       }
-      
+
       const data = await res.json();
-      setVideos(data);
+      setChannels(data);
     } catch (err) {
       setError(err.message);
     }
@@ -34,7 +34,7 @@ const SearchForm = () => {
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search for YouTube videos"
+          placeholder="Search for YouTube channels"
         />
         <button type="submit">Search</button>
       </form>
@@ -42,13 +42,14 @@ const SearchForm = () => {
       {error && <p style={{ color: 'red' }}>{error}</p>}
 
       <div>
-        {videos.length > 0 && (
+        {channels.length > 0 && (
           <ul>
-            {videos.map((video) => (
-              <li key={video.id}>
-                <h3>{video.title}</h3>
-                <img src={video.thumbnail} alt={video.title} />
-                <p>{video.description}</p>
+            {channels.map((channel) => (
+              <li key={channel.id}>
+                <h3>{channel.title}</h3>
+                <p> {channel.id}</p>
+                <img src={channel.thumbnail} alt={channel.title} />
+                <p>{channel.description}</p>
               </li>
             ))}
           </ul>
