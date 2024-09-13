@@ -1,14 +1,17 @@
-const withPWA = require('@ducanh2912/next-pwa').default({
-  dest: 'public',
-  disable: process.env.NODE_ENV === 'development',
-});
-
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  experimental: {
-    appDir: true,
+  webpack: (config, { isServer }) => {
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+        net: false,
+        tls: false,
+      };
+    }
+    return config;
   },
-};
+}
 
-module.exports = withPWA(nextConfig);
+module.exports = nextConfig
