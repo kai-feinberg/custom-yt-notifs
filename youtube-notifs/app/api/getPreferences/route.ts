@@ -1,25 +1,27 @@
-// /pages/api/getPreferences.js
-import { doc, getDoc } from 'firebase/firestore';
-import { db } from '@lib/firebase';
+import { NextResponse } from 'next/server';
+import { db } from '@/lib/firebaseAdmin';
 
-export default async function handler(req, res) {
-  if (req.method === 'GET') {
-    const { userId } = req.query;
+export async function GET(req: Request) {
+  const { searchParams } = new URL(req.url);
+  const userId = searchParams.get('userId');
 
-    try {
-      const docRef = doc(db, 'notifications', userId);
-      const docSnap = await getDoc(docRef);
+  if (!userId) {
+    return NextResponse.json({ error: 'User ID is required' }, { status: 400 });
+  }
 
-      if (docSnap.exists()) {
-        res.status(200).json(docSnap.data());
-      } else {
-        res.status(404).json({ error: 'No preferences found for this user' });
-      }
-    } catch (error) {
-      console.error('Error retrieving preferences:', error);
-      res.status(500).json({ error: 'Error retrieving preferences' });
+  try {
+    const docRef = db.collection('preferences').doc(userId);
+    const docSnap = await docRef.get();
+
+    if (!docSnap.exists) {
+      return NextResponse.json({ error: 'Preferences not found' }, { status: 404 });
     }
-  } else {
-    res.status(405).json({ error: 'Method not allowed' });
+
+    const preferencesData = docSnap.data();
+    return NextResponse.json({ data: preferencesData }, { status: 200 });
+
+  } catch (error) {
+    console.error('Error retrieving preferences:', error);
+    return NextResponse.json({ error: 'Error retrieving preferences' }, { status: 500 });
   }
 }

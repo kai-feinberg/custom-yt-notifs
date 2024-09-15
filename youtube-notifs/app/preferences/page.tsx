@@ -1,8 +1,10 @@
 "use client";
 
-import React, { useState } from 'react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Preferences } from '@/types/preferences'; // Create this type file if it doesn't exist
+import React, { useState, useEffect } from 'react';
+import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
+
+// Remove this import as we're defining the interface locally
+// import { Preferences } from '@/types/preferences';
 
 interface Preferences {
     userId: string;
@@ -11,16 +13,23 @@ interface Preferences {
     lastChecked: Date;
 }
 
-export default function SavePreferences() {
+export default function PreferencesPage() {
     const queryClient = useQueryClient();
-    const [preferences, setPreferences] = useState<Preferences>({
-        userId: 'user123',
-        channelId: 'UC12345',
-        searchQuery: 'React tutorials',
-        lastChecked: new Date(),
+    const [userId, setUserId] = useState('user123');
+    const [preferences, setPreferences] = useState<Preferences>({ userId: 'user123', channelId: '', searchQuery: '', lastChecked: new Date() });
+
+    const { data: storedPreferences, isLoading, error } = useQuery({
+        queryKey: ['preferences', userId],
+        queryFn: async () => {
+            const response = await fetch(`/api/getPreferences?userId=${userId}`);
+            if (!response.ok) {
+                throw new Error('Failed to fetch preferences');
+            }
+            return response.json();
+        },
     });
 
-    const mutation = useMutation({
+    const mutatePreferences = useMutation({
         mutationFn: async (prefs: Preferences) => {
             const response = await fetch('/api/savePreferences', {
                 method: 'POST',
@@ -35,41 +44,50 @@ export default function SavePreferences() {
             return response.json();
         },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['preferences'] });
+            queryClient.invalidateQueries({ queryKey: ['preferences', userId] });
         },
     });
 
     const handleSave = () => {
-        mutation.mutate(preferences);
+        if (preferences) {
+            mutatePreferences.mutate(preferences);
+        }
     };
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
-        setPreferences(prev => ({ ...prev, [name]: value }));
+        setPreferences(prev => prev ? { ...prev, [name]: value } : null);
     };
+
+    if (isLoading) return <div>Loading...</div>;
+    if (error) return <div>Error: {(error as Error).message}</div>;
+    console.log(storedPreferences);
 
     return (
         <div className="p-4">
-            <h2 className="text-xl font-bold mb-4">Save Preferences</h2>
-            <form onSubmit={(e) => { e.preventDefault(); handleSave(); }} className="space-y-4">
+            <h2 className="text-xl font-bold mb-4">User Preferences</h2>
+
+            {!isLoading && (
                 <div>
-                    <label htmlFor="userId" className="block">User ID:</label>
-                    <input
-                        type="text"
-                        id="userId"
-                        name="userId"
-                        value={preferences.userId}
-                        onChange={handleInputChange}
-                        className="w-full border rounded px-2 py-1"
-                    />
+                    <h3 className="text-lg font-semibold mb-2">Current Preferences:</h3>
+                    <div>
+                        <p>User ID: {storedPreferences.data.userId}</p>
+                        <p>Channel ID: {storedPreferences.data.channelId}</p>
+                        <p>Search Query: {storedPreferences.data.searchQuery}</p>
+                    </div>
                 </div>
+            )}
+
+            <h2> New search</h2>
+            <form onSubmit={(e) => { e.preventDefault(); handleSave(); }} className="space-y-4">
+                
                 <div>
                     <label htmlFor="channelId" className="block">Channel ID:</label>
                     <input
                         type="text"
                         id="channelId"
                         name="channelId"
-                        value={preferences.channelId}
+                        value={preferences?.channelId}
                         onChange={handleInputChange}
                         className="w-full border rounded px-2 py-1"
                     />
@@ -80,23 +98,25 @@ export default function SavePreferences() {
                         type="text"
                         id="searchQuery"
                         name="searchQuery"
-                        value={preferences.searchQuery}
+                        value={preferences?.searchQuery}
                         onChange={handleInputChange}
                         className="w-full border rounded px-2 py-1"
                     />
                 </div>
                 <button
                     type="submit"
-                    disabled={mutation.isPending}
+                    disabled={mutatePreferences.isPending}
                     className="bg-blue-500 text-white px-4 py-2 rounded disabled:bg-gray-300"
+                    onClick={handleSave}
                 >
-                    {mutation.isPending ? 'Saving...' : 'Save Preferences'}
+                    {mutatePreferences.isPending ? 'Saving...' : 'Save Preferences'}
                 </button>
             </form>
-            {mutation.isError && (
-                <p className="text-red-500 mt-2">Error saving preferences: {mutation.error.message}</p>
+            
+            {mutatePreferences.isError && (
+                <p className="text-red-500 mt-2">Error saving preferences: {mutatePreferences.error.message}</p>
             )}
-            {mutation.isSuccess && (
+            {mutatePreferences.isSuccess && (
                 <p className="text-green-500 mt-2">Preferences saved successfully!</p>
             )}
         </div>
