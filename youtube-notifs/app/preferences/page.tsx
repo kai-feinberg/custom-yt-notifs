@@ -61,26 +61,31 @@ export default function PreferencesPage() {
 
     if (isLoading) return <div>Loading...</div>;
     if (error) return <div>Error: {(error as Error).message}</div>;
-    console.log(storedPreferences);
 
     return (
         <div className="p-4">
             <h2 className="text-xl font-bold mb-4">User Preferences</h2>
 
-            {!isLoading && (
+            {!isLoading && storedPreferences.data && (
                 <div>
                     <h3 className="text-lg font-semibold mb-2">Current Preferences:</h3>
                     <div>
-                        <p>User ID: {storedPreferences.data.userId}</p>
-                        <p>Channel ID: {storedPreferences.data.channelId}</p>
-                        <p>Search Query: {storedPreferences.data.searchQuery}</p>
+                        {storedPreferences.data.map((preference: { id: string;[key: string]: any }) => (
+                        <div>
+                            <h2>id: {preference.id}</h2>
+                            <p>search query: {preference.searchQuery}</p>
+                            <p>userId: {preference.userId}</p>
+                            <p>last checked: {preference.lastChecked}</p>
+                        </div>
+                        ))}
                     </div>
                 </div>
             )}
 
+
             <h2> New search</h2>
             <form onSubmit={(e) => { e.preventDefault(); handleSave(); }} className="space-y-4">
-                
+
                 <div>
                     <label htmlFor="channelId" className="block">Channel ID:</label>
                     <input
@@ -112,7 +117,7 @@ export default function PreferencesPage() {
                     {mutatePreferences.isPending ? 'Saving...' : 'Save Preferences'}
                 </button>
             </form>
-            
+
             {mutatePreferences.isError && (
                 <p className="text-red-500 mt-2">Error saving preferences: {mutatePreferences.error.message}</p>
             )}

@@ -1,25 +1,35 @@
+// /pages/api/getPreferences.js
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/firebaseAdmin';
+import { getDocs, query, where } from 'firebase-admin/firestore';
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const userId = searchParams.get('userId');
 
+  // Validate that a userId is provided
   if (!userId) {
     return NextResponse.json({ error: 'User ID is required' }, { status: 400 });
   }
 
   try {
-    const docRef = db.collection('preferences').doc(userId);
-    const docSnap = await docRef.get();
+    // Query the 'preferences' collection for all documents where 'userId' matches the provided userId
+    const preferencesRef = db.collection('preferences');
+    const q = preferencesRef.where('userId', '==', userId);
+    const querySnapshot = await q.get();
 
-    if (!docSnap.exists) {
-      return NextResponse.json({ error: 'Preferences not found' }, { status: 404 });
+    // If no documents found, return 404
+    if (querySnapshot.empty) {
+      return NextResponse.json({ error: 'No preferences found for this user' }, { status: 404 });
     }
 
-    const preferencesData = docSnap.data();
-    return NextResponse.json({ data: preferencesData }, { status: 200 });
+    // Map over the documents and return an array of preference objects
+    const preferences = querySnapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
 
+    return NextResponse.json({ data: preferences }, { status: 200 });
   } catch (error) {
     console.error('Error retrieving preferences:', error);
     return NextResponse.json({ error: 'Error retrieving preferences' }, { status: 500 });
