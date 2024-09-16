@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
+import ClientLayout from './ClientLayout'
 
-import  QueryWrapper from '@/components/QueryWrapper'
 export const metadata: Metadata = {
   title: 'YouTube Notifier',
   description: 'Get notified for custom YouTube events',
@@ -14,9 +14,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <QueryWrapper>
-        <body>{children}</body>
-      </QueryWrapper >
-    </html >
+      <body>
+        <ClientLayout>{children}</ClientLayout>
+      </body>
+    </html>
   )
 }

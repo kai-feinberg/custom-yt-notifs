@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
+import { requestNotificationPermission, storeFCMToken } from '@/lib/firebaseClient';
 
 // Remove this import as we're defining the interface locally
 // import { Preferences } from '@/types/preferences';
@@ -75,6 +76,56 @@ export default function PreferencesPage() {
         setPreferences(prev => prev ? { ...prev, [name]: value } : null);
     };
 
+    const handleRequestPermission = async () => {
+        const token = await requestNotificationPermission();
+        if (token) {
+            console.log('Notification permission granted. Token:', token);
+            try {
+                await storeFCMToken(userId, token);
+                console.log('FCM token stored successfully');
+                // You can update the UI here to show that permissions were granted and token was stored
+            } catch (error) {
+                console.error('Failed to store FCM token:', error);
+                // You can update the UI here to show that token storage failed
+            }
+        } else {
+            console.log('Failed to get notification permission or token');
+            // You can update the UI here to show that permissions were denied
+        }
+    };
+
+    const sendTestNotification = async () => {
+        try {
+            // Fetch the FCM token
+            const response = await fetch(`/api/getFCMToken?userId=${userId}`);
+            if (!response.ok) {
+                throw new Error('Failed to fetch FCM token');
+            }
+            const { fcmToken } = await response.json();
+
+            // Send a test notification
+            const notificationResponse = await fetch('/api/sendNotification', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    token: fcmToken,
+                    title: 'Test Notification',
+                    body: 'This is a test notification from YouTube Notifier!',
+                }),
+            });
+
+            if (!notificationResponse.ok) {
+                throw new Error('Failed to send test notification');
+            }
+
+            console.log('Test notification sent successfully');
+        } catch (error) {
+            console.error('Error sending test notification:', error);
+        }
+    };
+
     if (isLoading) return <div>Loading...</div>;
     if (error) return <div>Error: {(error as Error).message}</div>;
 
@@ -140,6 +191,15 @@ export default function PreferencesPage() {
             {mutatePreferences.isSuccess && (
                 <p className="text-green-500 mt-2">Preferences saved successfully!</p>
             )}
+
+
+            <button onClick={handleRequestPermission} className="bg-green-500 text-white px-4 py-2 rounded mt-4 mr-2">
+                Request Notification Permission
+            </button>
+
+            <button onClick={sendTestNotification} className="bg-blue-500 text-white px-4 py-2 rounded mt-4">
+                Send Test Notification
+            </button>
         </div>
     );
 }
