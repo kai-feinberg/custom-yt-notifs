@@ -54,6 +54,21 @@ export default function PreferencesPage() {
         }
     };
 
+    const deletePreference = useMutation({
+        mutationFn: async (id: string) => {
+            const response = await fetch(`/api/deletePreference?id=${id}`, {
+                method: 'DELETE',
+            });
+            if (!response.ok) {
+                throw new Error('Failed to delete preference');
+            }
+            return response.json();
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['preferences', userId] });
+        },
+    });
+
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
         setPreferences(prev => prev ? { ...prev, [name]: value } : null);
@@ -76,6 +91,7 @@ export default function PreferencesPage() {
                             <p>search query: {preference.searchQuery}</p>
                             <p>userId: {preference.userId}</p>
                             <p>last checked: {preference.lastChecked}</p>
+                            <button onClick={() => deletePreference.mutate(preference.id)}>Delete</button>
                         </div>
                         ))}
                     </div>
