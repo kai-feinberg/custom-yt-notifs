@@ -1,112 +1,47 @@
-// /components/SearchForm.js
 "use client";
-import { useState, useEffect } from 'react';
-import { signInWithGoogle } from '@/lib/firebaseClient';
-import 'firebase/auth';
+import React, { useEffect } from 'react';
+import Link from 'next/link';
+import { signInWithGoogle, signOut, checkAuthState } from '@/lib/firebaseClient';
+import { useUserStore } from './store';
 
+export default function Home() {
+  const { uid, isLoggedIn, setUser, setLoggedIn } = useUserStore();
 
-const SearchForm = () => {
-  const [query, setQuery] = useState('');
-  const [channels, setChannels] = useState([]);
-  const [videos, setVideos] = useState([]);
-  const [error, setError] = useState('');
+  useEffect(() => {
+    checkAuthState();
+  }, []);
 
-  const handleSearchChannels = async (e) => {
-    e.preventDefault();
-
-    setError('');
-    setChannels([]);
-
-    try {
-      // Send a GET request to your API route with the search query
-      const res = await fetch(`/api/youtube/channels?q=${query}`);
-      if (!res.ok) {
-        throw new Error('Failed to fetch channels');
-      }
-
-      const data = await res.json();
-      setChannels(data);
-    } catch (err) {
-      setError(err.message);
+  const handleSignIn = async () => {
+    const response = await signInWithGoogle();
+    if (response) {
+      console.log('User signed in successfully');
     }
   };
 
-  const handleSearchVideos = async (e) => {
-    e.preventDefault();
-
-    setError('');
-    setVideos([]);
-
-    try {
-      // Send a GET request to your API route with the search query
-      const res = await fetch(`/api/youtube?q=${query}`);
-      if (!res.ok) {
-        throw new Error('Failed to fetch videos');
-      }
-
-      const data = await res.json();
-      setVideos(data);
-    } catch (err) {
-      setError(err.message);
-    }
+  const handleSignOut = async () => {
+    await signOut();
   };
 
   return (
-    <div>
-      <button onClick={signInWithGoogle}>Sign in with Google</button>
-      <form onSubmit={handleSearchChannels}>
-        <input
-          type="text"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search for YouTube channels"
-        />
-        <button type="submit">Search Channels</button>
-      </form>
-
-      <form onSubmit={handleSearchVideos}>
-        <input
-          type="text"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search for YouTube videos"
-        />
-        <button type="submit">Search Videos</button>
-      </form>
-
-      {error && <p style={{ color: 'red' }}>{error}</p>}
-      {/* 
-      <div>
-        {channels.length > 0 && (
-          <ul>
-            {channels.map((channel) => (
-              <li key={channel.id}>
-                <h3>{channel.title}</h3>
-                <p> {channel.id}</p>
-                <img src={channel.thumbnail} alt={channel.title} />
-                <p>{channel.description}</p>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div> */}
-
-      <div>
-        {videos.length > 0 && (
-          <ul>
-            {videos.map((video) => (
-              <li key={video.id}>
-                <h3>{video.title}</h3>
-                <p> {video.id}</p>
-                <img src={video.thumbnail} alt={video.title} />
-                <p>{video.description}</p>
-              </li>
-            ))}
-          </ul>
+    <main className="flex min-h-screen flex-col items-center justify-between p-24">
+      <div className="z-10 max-w-5xl w-full items-center justify-between font-mono text-sm lg:flex">
+        <h1 className="text-4xl font-bold mb-8">Welcome to YouTube Notifier</h1>
+        {isLoggedIn ? (
+          <>
+            <p>Welcome, user with UID: {uid}</p>
+            <button onClick={handleSignOut} className="bg-red-500 text-white px-4 py-2 rounded">
+              Sign Out
+            </button>
+            <Link href="/preferences" className="bg-blue-500 text-white px-4 py-2 rounded">
+              Go to Preferences
+            </Link>
+          </>
+        ) : (
+          <button onClick={handleSignIn}  className="bg-blue-500 text-white px-4 py-2 rounded">
+            Sign In with Google
+          </button>
         )}
       </div>
-    </div>
+    </main>
   );
-};
-
-export default SearchForm;
+}

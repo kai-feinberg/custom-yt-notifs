@@ -3,13 +3,10 @@
 import React, { useState, useEffect } from 'react';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { requestNotificationPermission, storeFCMToken } from '@/lib/firebaseClient';
-
 import { getMessaging, onMessage } from "firebase/messaging";
+import { useUserStore } from '../store';
 
 const messaging = getMessaging();
-
-// Remove this import as we're defining the interface locally
-// import { Preferences } from '@/types/preferences';
 
 interface Preferences {
     userId: string;
@@ -18,23 +15,23 @@ interface Preferences {
     lastChecked: Date;
 }
 
-
 export default function PreferencesPage() {
     const queryClient = useQueryClient();
-    const [userId, setUserId] = useState('user123');
-    const [preferences, setPreferences] = useState<Preferences>({ userId: 'user123', channelId: '', searchQuery: '', lastChecked: new Date() });
+    const { uid, isLoggedIn } = useUserStore();
+    const [preferences, setPreferences] = useState<Preferences>({ userId: uid || '', channelId: '', searchQuery: '', lastChecked: new Date() });
 
     const { data: storedPreferences, isLoading, error } = useQuery({
-        queryKey: ['preferences', userId],
+        queryKey: ['preferences', uid],
         queryFn: async () => {
-            const response = await fetch(`/api/getPreferences?userId=${userId}`);
+            if (!uid) throw new Error('User not logged in');
+            const response = await fetch(`/api/getPreferences?userId=${uid}`);
             if (!response.ok) {
                 throw new Error('Failed to fetch preferences');
             }
             return response.json();
         },
+        enabled: !!uid && isLoggedIn,
     });
-
 
     onMessage(messaging, (payload) => {
         console.log('Message received in foreground: ', payload);
@@ -55,7 +52,7 @@ export default function PreferencesPage() {
             return response.json();
         },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['preferences', userId] });
+            queryClient.invalidateQueries({ queryKey: ['preferences', uid] });
         },
     });
 
@@ -77,21 +74,25 @@ export default function PreferencesPage() {
             return response.json();
         },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['preferences', userId] });
+            queryClient.invalidateQueries({ queryKey: ['preferences', uid] });
         },
     });
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
-        setPreferences(prev => prev ? { ...prev, [name]: value } : null);
+        setPreferences(prev => ({ ...prev, [name]: value }));
     };
 
     const handleRequestPermission = async () => {
+        if (!uid) {
+            console.error('User not logged in');
+            return;
+        }
         const token = await requestNotificationPermission();
         if (token) {
             console.log('Notification permission granted. Token:', token);
             try {
-                await storeFCMToken(userId, token);
+                await storeFCMToken(uid, token);
                 console.log('FCM token stored successfully');
                 // You can update the UI here to show that permissions were granted and token was stored
             } catch (error) {
@@ -105,12 +106,16 @@ export default function PreferencesPage() {
     };
 
     const sendTestNotification = async () => {
+        if (!uid) {
+            console.error('User not logged in');
+            return;
+        }
         try {
             // Add a 5 second delay before calling the API
             await new Promise(resolve => setTimeout(resolve, 5000));
 
             // Fetch the FCM token
-            const response = await fetch(`/api/getFCMToken?userId=${userId}`);
+            const response = await fetch(`/api/getFCMToken?userId=${uid}`);
             if (!response.ok) {
                 throw new Error('Failed to fetch FCM token');
             }
@@ -139,6 +144,7 @@ export default function PreferencesPage() {
         }
     };
 
+    if (!isLoggedIn) return <div>Please log in to view preferences</div>;
     if (isLoading) return <div>Loading...</div>;
     if (error) return <div>Error: {(error as Error).message}</div>;
 
