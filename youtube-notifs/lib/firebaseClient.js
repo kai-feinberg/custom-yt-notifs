@@ -1,6 +1,6 @@
 "use client";
 import { initializeApp } from 'firebase/app';
-import { getMessaging, getToken } from "firebase/messaging";
+import { getMessaging, getToken, onMessage } from "firebase/messaging";
 
 const firebaseConfig = {
     apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -59,3 +59,11 @@ console.log('fcmToken:', fcmToken);
 };
 
 export { app };
+
+export const onMessageListener = () =>
+  new Promise((resolve) => {
+    const messaging = getMessaging(app);
+    onMessage(messaging, (payload) => {
+      resolve(payload);
+    });
+});

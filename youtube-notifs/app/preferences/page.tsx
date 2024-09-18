@@ -4,6 +4,10 @@ import React, { useState, useEffect } from 'react';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { requestNotificationPermission, storeFCMToken } from '@/lib/firebaseClient';
 
+import { getMessaging, onMessage } from "firebase/messaging";
+
+const messaging = getMessaging();
+
 // Remove this import as we're defining the interface locally
 // import { Preferences } from '@/types/preferences';
 
@@ -30,6 +34,11 @@ export default function PreferencesPage() {
         },
     });
 
+
+    onMessage(messaging, (payload) => {
+        console.log('Message received in foreground: ', payload);
+        // You can display a custom notification here if desired.
+    });
     const mutatePreferences = useMutation({
         mutationFn: async (prefs: Preferences) => {
             const response = await fetch('/api/savePreferences', {
@@ -96,6 +105,9 @@ export default function PreferencesPage() {
 
     const sendTestNotification = async () => {
         try {
+            // Add a 5 second delay before calling the API
+            await new Promise(resolve => setTimeout(resolve, 5000));
+
             // Fetch the FCM token
             const response = await fetch(`/api/getFCMToken?userId=${userId}`);
             if (!response.ok) {
@@ -138,13 +150,13 @@ export default function PreferencesPage() {
                     <h3 className="text-lg font-semibold mb-2">Current Preferences:</h3>
                     <div>
                         {storedPreferences.data.map((preference: { id: string;[key: string]: any }) => (
-                        <div>
-                            <h2>id: {preference.id}</h2>
-                            <p>search query: {preference.searchQuery}</p>
-                            <p>userId: {preference.userId}</p>
-                            <p>last checked: {preference.lastChecked}</p>
-                            <button onClick={() => deletePreference.mutate(preference.id)}>Delete</button>
-                        </div>
+                            <div>
+                                <h2>id: {preference.id}</h2>
+                                <p>search query: {preference.searchQuery}</p>
+                                <p>userId: {preference.userId}</p>
+                                <p>last checked: {preference.lastChecked}</p>
+                                <button onClick={() => deletePreference.mutate(preference.id)}>Delete</button>
+                            </div>
                         ))}
                     </div>
                 </div>
