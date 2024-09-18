@@ -18,6 +18,7 @@ interface Preferences {
     lastChecked: Date;
 }
 
+
 export default function PreferencesPage() {
     const queryClient = useQueryClient();
     const [userId, setUserId] = useState('user123');

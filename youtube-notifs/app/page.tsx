@@ -1,6 +1,9 @@
 // /components/SearchForm.js
 "use client";
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { signInWithGoogle } from '@/lib/firebaseClient';
+import 'firebase/auth';
+
 
 const SearchForm = () => {
   const [query, setQuery] = useState('');
@@ -50,6 +53,7 @@ const SearchForm = () => {
 
   return (
     <div>
+      <button onClick={signInWithGoogle}>Sign in with Google</button>
       <form onSubmit={handleSearchChannels}>
         <input
           type="text"
@@ -71,7 +75,7 @@ const SearchForm = () => {
       </form>
 
       {error && <p style={{ color: 'red' }}>{error}</p>}
-{/* 
+      {/* 
       <div>
         {channels.length > 0 && (
           <ul>

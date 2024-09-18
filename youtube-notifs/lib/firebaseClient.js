@@ -1,6 +1,7 @@
 "use client";
 import { initializeApp } from 'firebase/app';
 import { getMessaging, getToken, onMessage } from "firebase/messaging";
+import { getAuth, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 
 const firebaseConfig = {
     apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -9,9 +10,24 @@ const firebaseConfig = {
     storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
     messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
     appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
-  };
+};
 
 const app = initializeApp(firebaseConfig);
+
+export const auth = getAuth(app);
+
+const googleProvider = new GoogleAuthProvider(); 
+
+export const signInWithGoogle = async () => {
+  try {
+    const response = await signInWithPopup(auth, googleProvider);
+    console.log('response:', response);
+    return response;
+  } catch (error) {
+    console.error('An error occurred while signing in with Google', error);
+    return null;
+  }
+};
 
 export const requestNotificationPermission = async () => {
   try {
@@ -37,8 +53,8 @@ export const requestNotificationPermission = async () => {
 };
 
 export const storeFCMToken = async (userId, fcmToken) => {
-console.log('userId:', userId);
-console.log('fcmToken:', fcmToken);
+  console.log('userId:', userId);
+  console.log('fcmToken:', fcmToken);
   try {
     const response = await fetch('/api/storeFCMToken', {
       method: 'POST',
