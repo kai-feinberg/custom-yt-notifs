@@ -5,6 +5,7 @@ import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { requestNotificationPermission, storeFCMToken } from '@/lib/firebaseClient';
 import { getMessaging, onMessage } from "firebase/messaging";
 import { useUserStore } from '../store';
+import { ChannelSearch } from '@/components/ChannelSearch';
 
 const messaging = getMessaging();
 
@@ -15,6 +16,7 @@ interface Preferences {
     searchQuery: string;
     lastChecked: Date;
 }
+
 
 export default function PreferencesPage() {
     const queryClient = useQueryClient();
@@ -218,7 +220,7 @@ export default function PreferencesPage() {
 
             <button onClick={sendTestNotification} className="bg-blue-500 text-white px-4 py-2 rounded mt-4">
                 Send Test Notification
-            </button>
+            </button>        
         </div>
     );
 }
