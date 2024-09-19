@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import ClientLayout from './ClientLayout'
+import '@/app/globals.css'
 
 export const metadata: Metadata = {
   title: 'YouTube Notifier',

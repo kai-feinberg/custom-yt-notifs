@@ -11,6 +11,7 @@ const messaging = getMessaging();
 interface Preferences {
     userId: string;
     channelId: string;
+    channelName: string;
     searchQuery: string;
     lastChecked: Date;
 }
@@ -18,7 +19,7 @@ interface Preferences {
 export default function PreferencesPage() {
     const queryClient = useQueryClient();
     const { uid, isLoggedIn } = useUserStore();
-    const [preferences, setPreferences] = useState<Preferences>({ userId: uid || '', channelId: '', searchQuery: '', lastChecked: new Date() });
+    const [preferences, setPreferences] = useState<Preferences>({ userId: uid || '', channelId: '', searchQuery: '', channelName:'', lastChecked: new Date() });
 
     const { data: storedPreferences, isLoading, error } = useQuery({
         queryKey: ['preferences', uid],
@@ -158,9 +159,8 @@ export default function PreferencesPage() {
                     <div>
                         {storedPreferences.data.map((preference: { id: string;[key: string]: any }) => (
                             <div>
-                                <h2>id: {preference.id}</h2>
-                                <p>search query: {preference.searchQuery}</p>
-                                <p>userId: {preference.userId}</p>
+                                <h2>{preference.channelName}</h2>
+                                <p>Videos containing the word {preference.searchQuery}</p>
                                 <p>last checked: {preference.lastChecked}</p>
                                 <button onClick={() => deletePreference.mutate(preference.id)}>Delete</button>
                             </div>

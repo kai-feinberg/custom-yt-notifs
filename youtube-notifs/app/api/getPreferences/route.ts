@@ -1,7 +1,6 @@
 // /pages/api/getPreferences.js
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/firebaseAdmin';
-import { getDocs, query, where } from 'firebase-admin/firestore';
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
@@ -18,9 +17,8 @@ export async function GET(req: Request) {
     const q = preferencesRef.where('userId', '==', userId);
     const querySnapshot = await q.get();
 
-    // If no documents found, return 404
     if (querySnapshot.empty) {
-      return NextResponse.json({ error: 'No preferences found for this user' }, { status: 404 });
+      return NextResponse.json({ data: [], message: 'No preferences found for this user' }, { status: 200 });
     }
 
     // Map over the documents and return an array of preference objects

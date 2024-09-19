@@ -3,6 +3,7 @@ import React, { useEffect } from 'react';
 import Link from 'next/link';
 import { signInWithGoogle, signOut, checkAuthState } from '@/lib/firebaseClient';
 import { useUserStore } from './store';
+import { ChannelSearch } from '@/components/ChannelSearch';
 
 export default function Home() {
   const { uid, isLoggedIn, setUser, setLoggedIn } = useUserStore();
@@ -28,7 +29,6 @@ export default function Home() {
         <h1 className="text-4xl font-bold mb-8">Welcome to YouTube Notifier</h1>
         {isLoggedIn ? (
           <>
-            <p>Welcome, user with UID: {uid}</p>
             <button onClick={handleSignOut} className="bg-red-500 text-white px-4 py-2 rounded">
               Sign Out
             </button>
@@ -42,6 +42,7 @@ export default function Home() {
           </button>
         )}
       </div>
+      <ChannelSearch />
     </main>
   );
 }
