@@ -21,8 +21,6 @@ interface Preferences {
   channelName: string;
   searchQuery: string;
 }
-const messaging = getMessaging();
-
 
 export default function Home() {
   const queryClient = useQueryClient();
@@ -124,10 +122,6 @@ export default function Home() {
     console.log('Next message for debugging:', await response.json());
   };
 
-  onMessage(messaging, (payload) => {
-    console.log('Message received in foreground: ', payload);
-    // You can display a custom notification here if desired.
-  });
 
   const sendTestNotification = async () => {
     if (!uid) {
@@ -178,9 +172,7 @@ export default function Home() {
             <button onClick={handleSignOut} className="bg-red-500 text-white px-4 py-2 rounded">
               Sign Out
             </button>
-            <Link href="/preferences" className="bg-blue-500 text-white px-4 py-2 rounded">
-              Go to Preferences
-            </Link>
+
             <button onClick={triggerCronJob} className="bg-green-500 text-white px-4 py-2 rounded">
               Trigger Cron Job
             </button>
