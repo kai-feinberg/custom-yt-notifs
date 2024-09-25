@@ -10,8 +10,8 @@ const youtube = google.youtube({
 
 export async function GET(req: NextRequest) {
   const searchParams = req.nextUrl.searchParams;
-  const query = searchParams.get('q');
-  // const channelId = searchParams.get('channelId');  // Accept channelId from the query parameters
+  const query = searchParams.get('query');
+  const channelId = searchParams.get('channelId');  // Accept channelId from the query parameters
 
   if (!query) {
     return NextResponse.json({ error: 'Search query is required' }, { status: 400 });
@@ -23,8 +23,9 @@ export async function GET(req: NextRequest) {
       part: ['snippet'],
       q: query,
       type: ['video'],
-      maxResults: 10,
-      channelId: 'UC9p4phe5cjnBlwtCzGgRw-g',  // Add channelId if provided
+      maxResults: 3,
+      channelId: channelId ,  // Add channelId if provided
+      publishedAfter: new Date(new Date().getTime() - 24 * 60 * 60 * 1000).toISOString(), // Search for videos published in the last 24 hours
       // ...(channelId && { channelId }) // Add channelId if provided
     };
 

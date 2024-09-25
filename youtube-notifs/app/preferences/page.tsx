@@ -14,14 +14,13 @@ interface Preferences {
     channelId: string;
     channelName: string;
     searchQuery: string;
-    lastChecked: Date;
 }
 
 
 export default function PreferencesPage() {
     const queryClient = useQueryClient();
     const { uid, isLoggedIn } = useUserStore();
-    const [preferences, setPreferences] = useState<Preferences>({ userId: uid || '', channelId: '', searchQuery: '', channelName:'', lastChecked: new Date() });
+    const [preferences, setPreferences] = useState<Preferences>({ userId: uid || '', channelId: '', searchQuery: '', channelName:'' });
 
     const { data: storedPreferences, isLoading, error } = useQuery({
         queryKey: ['preferences', uid],
@@ -163,7 +162,6 @@ export default function PreferencesPage() {
                             <div>
                                 <h2>{preference.channelName}</h2>
                                 <p>Videos containing the word {preference.searchQuery}</p>
-                                <p>last checked: {preference.lastChecked}</p>
                                 <button onClick={() => deletePreference.mutate(preference.id)}>Delete</button>
                             </div>
                         ))}
