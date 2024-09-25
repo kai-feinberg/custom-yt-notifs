@@ -121,52 +121,53 @@ export default function Home() {
       throw new Error('Failed to trigger cron job');
     }
     console.log('Cron job triggered successfully');
+    console.log('Next message for debugging:', await response.json());
   };
 
   onMessage(messaging, (payload) => {
     console.log('Message received in foreground: ', payload);
     // You can display a custom notification here if desired.
-});
+  });
 
-const sendTestNotification = async () => {
-  if (!uid) {
+  const sendTestNotification = async () => {
+    if (!uid) {
       console.error('User not logged in');
       return;
-  }
-  try {
+    }
+    try {
       // Add a 5 second delay before calling the API
       await new Promise(resolve => setTimeout(resolve, 5000));
 
       // Fetch the FCM token
       const response = await fetch(`/api/getFCMToken?userId=${uid}`);
       if (!response.ok) {
-          throw new Error('Failed to fetch FCM token');
+        throw new Error('Failed to fetch FCM token');
       }
       const { fcmToken } = await response.json();
       console.log('FCM token:', fcmToken);
 
       // Send a test notification
       const notificationResponse = await fetch('/api/sendNotification', {
-          method: 'POST',
-          headers: {
-              'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-              token: fcmToken,
-              title: 'Test Notification',
-              body: 'This is a test notification from YouTube Notifier!',
-          }),
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          token: fcmToken,
+          title: 'Test Notification',
+          body: 'This is a test notification from YouTube Notifier!',
+        }),
       });
 
       if (!notificationResponse.ok) {
-          throw new Error('Failed to send test notification');
+        throw new Error('Failed to send test notification');
       }
 
       console.log('Test notification sent successfully');
-  } catch (error) {
+    } catch (error) {
       console.error('Error sending test notification:', error);
-  }
-};
+    }
+  };
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-between p-24">

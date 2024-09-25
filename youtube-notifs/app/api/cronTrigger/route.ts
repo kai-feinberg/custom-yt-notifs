@@ -7,6 +7,9 @@ export async function GET(req: Request) {
   try {
     // Fetch user preferences from Firebase
     const preferencesSnapshot = await db.collection('preferences').get();
+    let notificationsSent = 0;
+    let newVideos = 0;
+    let latestVideos = []; // Initialize an array to store the latest videos
     const preferences = preferencesSnapshot.docs.map(doc => ({
       id: doc.id,
       userId: doc.data().userId,
@@ -22,8 +25,9 @@ export async function GET(req: Request) {
       const latestVideo = await getTodaysVideo(channelId, searchQuery);
 
       if (latestVideo) {
+        newVideos++;
+        latestVideos.push(latestVideo); // Add the latest video to the list
         // Fetch the user's FCM token
-        console.log(latestVideo);
         const userDoc = await db.collection('users').doc(userId).get();
         const fcmToken = userDoc.data()?.fcmToken;
 
@@ -35,13 +39,15 @@ export async function GET(req: Request) {
               `New video: ${latestVideo.title}`
             );
             console.log(`Notification sent for ${userId}`);
-
-        
-        }
+            notificationsSent++; // Increment counter for each notification sent
+          }
       }
     }
 
-    return new Response(JSON.stringify({ message: 'Notifications triggered successfully' }), { status: 200 });
+    return new Response(JSON.stringify({ 
+      message: `${newVideos} new videos found. Total notifications sent: ${notificationsSent}`,
+      latestVideos: latestVideos // Include the list of latest videos in the response
+    }), { status: 200 });
   } catch (error) {
     console.error('Error triggering notifications:', error);
     return new Response(JSON.stringify({ error: 'Error triggering notifications' }), { status: 500 });
@@ -58,13 +64,13 @@ async function getTodaysVideo(channelId: string, query: string) {
   });
  
   const data = await response.json();
-  if (data.items && data.items.length > 0) {
-    const { id, snippet } = data.items[0];
+  if (data && data.length > 0) {
+    const { id, title, description, thumbnail } = data[0];
     return {
       videoId: id,
-      title: snippet.title,
-      description: snippet.description,
-      thumbnail: snippet.thumbnails.default.url,
+      title: title,
+      description: description,
+      thumbnail: thumbnail,
     };
   }
 
@@ -75,7 +81,7 @@ async function getTodaysVideo(channelId: string, query: string) {
 async function sendNotification(token: string, title: string, body: string) {
   
   // Send a test notification
-  const notificationResponse = await fetch('/api/sendNotification', {
+  const notificationResponse = await fetch(`${baseUrl}/api/sendNotification`, {
     method: 'POST',
     headers: {
         'Content-Type': 'application/json',
